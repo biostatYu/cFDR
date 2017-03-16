@@ -54,19 +54,33 @@ FDR.assess <- function(Z,alt,alpha) {
 ##'     between the estimated FDR and alpha.  Used if you want to
 ##'     optimise alpha to a pre-specified overall FDR control
 ##' @param method method for estimating overall FDR in a set of
-##'     overlapping rectangles given known FDR control in each
+##'     overlapping rectangles given known FDR control in each.  default is liley.number, which is the published method - the others are purely experimental and shouldn't be used.
 ##' @export
 ##' @return absolute difference between estimated overall FDR control and alpha.target
 ##' @author Chris Wallace
 cFDR.tune <- function(alpha.current=alpha, p,pc,pp,alpha.target=0,
-                      method=c("liley.number","constant.density","liley.area")) {
+                      method=c("liley.number","constant.density","liley.area","unadjusted")) {
     method <- match.arg(method)
-    message(alpha.current)
+#    message(method,"\t",alpha.current)
     reject <- pp<=alpha.current #& p<=p.max
     nL <- sum(reject)
     if(nL==0)
         return(0)
     allM <- cbind(p,pc,A=p*pc)[reject,,drop=FALSE]
+    biggestM <- which.max(allM[,3])
+    x <- allM[biggestM,1]
+    y <- allM[biggestM,2]
+    nM <- sum(p<x & pc < y)
+    alpha.obs <- switch(method,
+                        unadjusted=alpha.current,
+                        liley.area=alpha.current * areaLoverM(allM),
+                        liley.number=alpha.current * nL/nM,
+                        constant.density = alpha.current * nM * areaLoverM(allM) / nL,
+                        conservative=1-(1-alpha.current)*nM/nL)
+    abs(alpha.obs - alpha.target)
+}
+
+areaLoverM <- function(allM) {
     biggestM <- which.max(allM[,3])
     areaM <- allM[biggestM,3]
     x <- allM[biggestM,1]
@@ -77,13 +91,7 @@ cFDR.tune <- function(alpha.current=alpha, p,pc,pp,alpha.target=0,
     areaL <- area(merged.poly)
     if(areaL < areaM) # numerical inaccuracies
         areaL <- areaM
-    nM <- sum(p<x & pc < y)
-    alpha.obs <- switch(method,
-                        liley.area=alpha.current * areaL/areaM,
-                        liley.number=alpha.current * nL/nM,
-                        constant.density = alpha.current * nM * areaL / ( nL * areaM),
-                        conservative=1-(1-alpha.current)*nM/nL)
-    abs(alpha.obs - alpha.target)
+    areaL/areaM
 }
 
 ##' Calculate cFDR given a vector of test and conditional Z scores
@@ -129,7 +137,7 @@ cFDR <- function(Z,Zc,eps=0.01,alpha=seq(0.01,0.1,by=0.005),do.optimise=FALSE,..
 ##' @return named vector of requested alpha, estimated alpha, power, fdr
 ##' @author Chris Wallace
 cFDR.assess <- function(Z,Zc,alt,alpha,...) {
-    result <- cFDR(Z,Zc,alpha=alpha,do.optimise=TRUE)
+    result <- cFDR(Z,Zc,alpha=alpha,do.optimise=TRUE,...)
     reject <- result$cFDR < result$alpha #& p < p.max
     power=if(any(alt)) { mean(reject[ alt ]) } else { 0 }
     fdr=mean(!alt[reject])
