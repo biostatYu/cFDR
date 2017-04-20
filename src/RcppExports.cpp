@@ -29,3 +29,17 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// cecdf2
+NumericVector cecdf2(NumericVector x1, NumericVector x2, NumericVector y1, NumericVector y2);
+RcppExport SEXP cFDR_cecdf2(SEXP x1SEXP, SEXP x2SEXP, SEXP y1SEXP, SEXP y2SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type x1(x1SEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type x2(x2SEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type y1(y1SEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type y2(y2SEXP);
+    rcpp_result_gen = Rcpp::wrap(cecdf2(x1, x2, y1, y2));
+    return rcpp_result_gen;
+END_RCPP
+}

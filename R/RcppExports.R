@@ -9,3 +9,7 @@ cecdf <- function(x, y) {
     .Call('cFDR_cecdf', PACKAGE = 'cFDR', x, y)
 }
 
+cecdf2 <- function(x1, x2, y1, y2) {
+    .Call('cFDR_cecdf2', PACKAGE = 'cFDR', x1, x2, y1, y2)
+}
+
