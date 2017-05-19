@@ -11,5 +11,6 @@ LinkingTo: Rcpp
 Imports: Rcpp,spatstat
 RoxygenNote: 6.0.1
 Suggests: knitr,
-    rmarkdown
+    rmarkdown,
+    testthat
 VignetteBuilder: knitr

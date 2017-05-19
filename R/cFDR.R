@@ -41,62 +41,35 @@ FDR.assess <- function(Z,alt,alpha) {
     ret <- c(alpha=alpha,power=power,fdr=fdr)
     names(ret) <- c("alpha","power","fdr")
     return(ret)
- 
+    
 }
 
-##' Estimate overal FDR for the cFDR procedure at a given alpha
-##'
-##' @title cFDR.tune
-##' @param alpha.current alpha to assess
-##' @param p p values corresponding to test statistics
-##' @param pc p values corresponding to conditional test statistics
-##' @param pp local FDR calculated by FDR function for p
-##' @param alpha.target optional (default 0). If set, will return the
-##'     absolute difference between the estimated FDR and alpha.  Used
-##'     if you want to optimise alpha to a pre-specified overall FDR
-##'     control
-##' @param method method for estimating overall FDR in a set of
-##'     overlapping rectangles given known FDR control in each.
-##'     default is liley.area, which is the published method - the
-##'     others are purely experimental and shouldn't be used.
-##' @export
-##' @return absolute difference between estimated overall FDR control
-##'     and alpha.target
-##' @author Chris Wallace
-cFDR.tune <- function(alpha.current=alpha, p,pc,pp,alpha.target=0,
-                      method=c("liley.area","constant.density","liley.number","unadjusted")) {
-    method <- match.arg(method)
-#    message(method,"\t",alpha.current)
-    reject <- pp<=alpha.current #& p<=p.max
-    nL <- sum(reject)
-    if(nL==0)
-        return(0)
-    allM <- cbind(p,pc,A=p*pc)[reject,,drop=FALSE]
-    biggestM <- which.max(allM[,3])
-    x <- allM[biggestM,1]
-    y <- allM[biggestM,2]
-    nM <- sum(p<x & pc < y)
-    alpha.obs <- switch(method,
-                        unadjusted=alpha.current,
-                        liley.area=alpha.current * areaLoverM(allM),
-                        liley.number=alpha.current * nL/nM,
-                        constant.density = alpha.current * nM * areaLoverM(allM) / nL,
-                        conservative=1-(1-alpha.current)*nM/nL)
-    abs(alpha.obs - alpha.target)
+#ggplot(allM,aes(x=x,y=y)) +  geom_rect(aes(xmin=0,xmax=x,ymin=0,ymax=y),data=Mrect)+ geom_point(aes(x=x,y=y),col="red") + geom_point(col="blue",data=allM[which.max(allM$y * allM$x),]) + geom_smooth(data=Mrect,se=FALSE)
+findrects <- function(df) {
+    o <- order(df$x,decreasing=TRUE)
+    df <- df[o,]
+    keep <- rects(df$x,df$y1)
+    return(df[which(keep==TRUE),,drop=FALSE])
 }
+## findrects <- function(df) {
+##     o <- order(df$x,decreasing=TRUE)
+##     df <- df[o,]
+##     df$n=1:nrow(df)
+##     df$keep <- TRUE
+##     for(i in 1:nrow(df)) {
+##         if(df[i,"keep"]==FALSE)
+##             next
+##         wh <- which(df$n>i & df$y1<df[i,"y1"])
+##         df[wh,"keep"] <- FALSE
+##     }
+##     return(df[which(df$keep==TRUE),,drop=FALSE])
+## }
 
-areaLoverM <- function(allM) {
-    biggestM <- which.max(allM[,3])
-    areaM <- allM[biggestM,3]
-    x <- allM[biggestM,1]
-    y <- allM[biggestM,2]
-    allM <- allM[allM[,1]>=x | allM[,2] >=y,,drop=FALSE]
-    polys <- lapply(1:nrow(allM), function(i) { owin(c(0, allM[i,1]), c(0, allM[i,2])) })
-    merged.poly <- do.call("union.owin",polys)
-    areaL <- area(merged.poly)
-    if(areaL < areaM) # numerical inaccuracies
-        areaL <- areaM
-    areaL/areaM
+getA <- function(df,p2) {
+    y1diff <- diff(c(0,df$y1))
+#    df$A1 <- df$x * df$ydiff
+    y2diff <- diff(c(0,df$y2))
+    df$x * (y2diff + y1diff)
 }
 
 ##' Calculate cFDR given vectors of *independent* test and conditional Z scores
@@ -121,17 +94,75 @@ cFDR <- function(Z,Zc,eps=0.01,alpha=seq(0.01,0.1,by=0.005),do.optimise=FALSE,..
     pc <- 2*pnorm(abs(Zc),lower.tail=FALSE)
     pp <- p / cecdf(p,pc)
     summary(pp)
+    Zc.fit <- fit.both(Zc[abs(Z)<qnorm(0.4,lower.tail=FALSE)]) # p value > 0.8
+    q <- qnorm(pc/2)
+    pc2 <- pnorm(q,Zc.fit["mu"],sd=sqrt(Zc.fit["sigma2"]))*2
+    data <- data.frame(x=p,y=pc,y1=pc*Zc.fit["pi0"],y2=pc2*(1-Zc.fit["pi0"]),pp=pp)
     if(do.optimise) {
         if(length(alpha)>1)
             stop("can only optimise to a single alpha")
-        o <- optimise(cFDR.tune, p=p, pc=pc, pp=pp, ..., alpha.target=alpha, interval=alpha*c(0.00001,1),tol=eps)
+        o <- optimise(cFDR.tune, data=data, ..., alpha.target=alpha, interval=alpha*c(0.00001,1),tol=eps)
         return(list(alpha=o$minimum, est.cFDR=alpha, cFDR=pp))
     }
-    est.cFDR <- sapply(alpha, cFDR.tune, p=p, pc=pc, pp=pp,...)
-    list(alpha=alpha, est.cFDR=est.cFDR, cFDR=pp)
+    est.cFDR <- sapply(alpha, cFDR.tune, data=data,...)
+    list(alpha=alpha, est.cFDR=est.cFDR, cFDR=data$pp)
 }
 
-##' Calculate cFDR given vectors of *independent* test and conditional Z scores
+##' Estimate overal FDR for the cFDR procedure at a given alpha
+##'
+##' @title cFDR.tune
+##' @param alpha.current alpha to assess
+##' @param p p values corresponding to test statistics
+##' @param pc p values corresponding to conditional test statistics
+##' @param pp local FDR calculated by FDR function for p
+##' @param alpha.target optional (default 0). If set, will return the
+##'     absolute difference between the estimated FDR and alpha.  Used
+##'     if you want to optimise alpha to a pre-specified overall FDR
+##'     control
+##' @param method method for estimating overall FDR in a set of
+##'     overlapping rectangles given known FDR control in each.
+##'     default is liley.area, which is the published method - the
+##'     others are purely experimental and shouldn't be used.
+##' @export
+##' @return absolute difference between estimated overall FDR control
+##'     and alpha.target
+##' @author Chris Wallace
+cFDR.tune <- function(alpha.current=alpha.target, data, alpha.target=0.05,
+                      method=c("liley.area","constant.density","liley.number","unadjusted")) {
+    #method <- match.arg(method)
+                                        #    message(method,"\t",alpha.current)
+    reject <- data$pp<=alpha.current #& p<=p.max
+    nL <- sum(reject)
+    if(nL==0)
+        return(0)
+    allM <- data[reject,,drop=FALSE]
+    wh <- which.max(allM$y * allM$x)
+    aM <- allM$x[wh] * allM$y # (allM$y1[wh] + allM$y2[wh])
+    alphaM <- allM$pp[wh]
+    
+    Mrect <- findrects(allM)
+    Mrect$A <- getA(Mrect)
+    aL <- sum(Mrect$A)
+    
+    ## biggestM <- which.max(allM[,3])
+    ## x <- allM[biggestM,1]
+    ## y <- allM[biggestM,2]
+    ## nM <- sum(p<x & pc < y)
+    ## lower.poly <- Mpoly(allM,upper=FALSE)
+    ## upper.poly <- Mpoly(allM,upper=TRUE)
+    ## Zc.fit <- fit.em(Zc[abs(Z)<qnorm(0.4,lower.tail=FALSE)]) # p value > 0.8
+    alpha.obs <- ## switch(method,
+                 ##        unadjusted=alpha.current,
+                        ## liley.area=
+    ## alphaM *
+    alpha.current * aL/aM#, #areaLoverM(allM),
+                        ## liley.number=alpha.current * nL/nM,
+                        ## ## constant.density = alpha.current * nM * areaLoverM(allM) / nL,
+                        ## conservative=1-(1-alpha.current)*nM/nL)
+    abs(alpha.obs - alpha.target)
+}
+
+###' Calculate cFDR given vectors of *independent* test and conditional Z scores
 ##'
 ##' @title cFDR
 ##' @inheritParams FDR.assess
@@ -236,3 +267,41 @@ depcFDR <- function(Z,Zc,rho,mu=0,muc,eps=0.01,p.max=0.1,alpha=seq(0.01,0.1,by=0
     list(alpha=alpha, ## est.cFDR=est.cFDR, 
          cFDR=pp)
 }
+
+
+poly2rect <- function(p) {
+    x <- p$bdry[[1]]$x
+    y <- p$bdry[[1]]$y
+    n <- length(x)
+    xr <- x[seq(1,n-1,by=2)]
+    yr <- y[seq(2,n,by=2)]
+} 
+Mpoly <- function(M,upper=FALSE) {
+    biggestM <- which.max(M[,3])
+    x <- M[biggestM,1]
+    y <- M[biggestM,2]
+    use <- if(upper) { M[,1] <= x | M[,2] <= y } else { M[,1] >=x | M[,2] >= y }
+    M <- M[use,,drop=FALSE]
+    f <- if(upper) {
+             function(i) owin(xrange=c(M[i,1],1), yrange=c(M[i,2], 1)) # check this
+         } else {
+             function(i) owin(xrange=c(0, M[i,1]), yrange=c(0, M[i,2]))
+         }
+    polys <- lapply(1:nrow(M), f)
+    do.call("union.owin",polys)
+}
+
+areaLoverM <- function(allM) {
+    biggestM <- which.max(allM[,3])
+        areaM <- allM[biggestM,3]
+    x <- allM[biggestM,1]
+    y <- allM[biggestM,2]
+    allM <- allM[allM[,1]>=x | allM[,2] >=y,,drop=FALSE]
+    polys <- lapply(1:nrow(allM), function(i) { owin(c(0, allM[i,1]), c(0, allM[i,2])) })
+    merged.poly <- do.call("union.owin",polys)
+    areaL <- area(merged.poly)
+    if(areaL < areaM) # numerical inaccuracies
+        areaL <- areaM
+    areaL/areaM
+}
+

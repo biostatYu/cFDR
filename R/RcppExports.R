@@ -5,11 +5,25 @@ becdf <- function(x, y) {
     .Call('cFDR_becdf', PACKAGE = 'cFDR', x, y)
 }
 
+#' calculate p(X<x|Y<y) for fixed vectors of points x and y
 cecdf <- function(x, y) {
     .Call('cFDR_cecdf', PACKAGE = 'cFDR', x, y)
 }
 
+#' find weighted mean of values of x either side of target
+bestfit <- function(x, y, target) {
+    .Call('cFDR_bestfit', PACKAGE = 'cFDR', x, y, target)
+}
+
+fdrp <- function(x) {
+    .Call('cFDR_fdrp', PACKAGE = 'cFDR', x)
+}
+
 cecdf2 <- function(x1, x2, y1, y2) {
     .Call('cFDR_cecdf2', PACKAGE = 'cFDR', x1, x2, y1, y2)
+}
+
+rects <- function(x, y) {
+    .Call('cFDR_rects', PACKAGE = 'cFDR', x, y)
 }
 
