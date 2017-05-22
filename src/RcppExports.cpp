@@ -17,6 +17,29 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// uecdf
+NumericVector uecdf(NumericVector x);
+RcppExport SEXP cFDR_uecdf(SEXP xSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
+    rcpp_result_gen = Rcpp::wrap(uecdf(x));
+    return rcpp_result_gen;
+END_RCPP
+}
+// wecdf
+NumericVector wecdf(NumericVector x, NumericVector w);
+RcppExport SEXP cFDR_wecdf(SEXP xSEXP, SEXP wSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type w(wSEXP);
+    rcpp_result_gen = Rcpp::wrap(wecdf(x, w));
+    return rcpp_result_gen;
+END_RCPP
+}
 // cecdf
 NumericVector cecdf(NumericVector x, NumericVector y);
 RcppExport SEXP cFDR_cecdf(SEXP xSEXP, SEXP ySEXP) {
@@ -26,6 +49,30 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type y(ySEXP);
     rcpp_result_gen = Rcpp::wrap(cecdf(x, y));
+    return rcpp_result_gen;
+END_RCPP
+}
+// bestfit
+NumericVector bestfit(NumericVector x, NumericVector y, NumericVector target);
+RcppExport SEXP cFDR_bestfit(SEXP xSEXP, SEXP ySEXP, SEXP targetSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type y(ySEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type target(targetSEXP);
+    rcpp_result_gen = Rcpp::wrap(bestfit(x, y, target));
+    return rcpp_result_gen;
+END_RCPP
+}
+// fdrp
+NumericVector fdrp(NumericVector x);
+RcppExport SEXP cFDR_fdrp(SEXP xSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
+    rcpp_result_gen = Rcpp::wrap(fdrp(x));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -40,6 +87,18 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< NumericVector >::type y1(y1SEXP);
     Rcpp::traits::input_parameter< NumericVector >::type y2(y2SEXP);
     rcpp_result_gen = Rcpp::wrap(cecdf2(x1, x2, y1, y2));
+    return rcpp_result_gen;
+END_RCPP
+}
+// rects
+LogicalVector rects(NumericVector x, NumericVector y);
+RcppExport SEXP cFDR_rects(SEXP xSEXP, SEXP ySEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type y(ySEXP);
+    rcpp_result_gen = Rcpp::wrap(rects(x, y));
     return rcpp_result_gen;
 END_RCPP
 }
