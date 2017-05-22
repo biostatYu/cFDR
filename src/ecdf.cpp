@@ -17,6 +17,7 @@ NumericVector becdf(NumericVector x, NumericVector y) {
 }
 
 
+<<<<<<< HEAD
 // //' calculate p(Y<y|H0) = P(Y<y | X<=x,H0)P(x<=x | H0) + P(Y<y|X>x,H0)P(X>x|H0)
 // // [[Rcpp::export]]
 // NumericVector ecdfh0(NumericVector x, NumericVector y) {
@@ -38,11 +39,15 @@ NumericVector becdf(NumericVector x, NumericVector y) {
 
 //' univariate eCDF
 //' calculate p(X<x) for fixed vector of points x
+=======
+//' calculate p(X<x|Y<y) for fixed vectors of points x and y
+>>>>>>> f5ad236c4d30b49bf9bca0a33bc8087ebc743ec5
 // [[Rcpp::export]]
 NumericVector uecdf(NumericVector x) {
   int n=x.length();
   NumericVector cdf(n);
   for(int i=0; i<n; i++) {
+<<<<<<< HEAD
     cdf[i]=0;
     for(int j=0; j<n; j++) {
       if(x[j]<=x[i])
@@ -80,6 +85,8 @@ NumericVector cecdf(NumericVector x, NumericVector y) {
   int n=x.length();
   NumericVector cdf(n);
   for(int i=0; i<n; i++) {
+=======
+>>>>>>> f5ad236c4d30b49bf9bca0a33bc8087ebc743ec5
     int mi=0,ni=0;
     for(int j=0; j<n; j++) {
       if(y[j]<=y[i]) {

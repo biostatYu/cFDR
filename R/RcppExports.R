@@ -6,6 +6,7 @@ becdf <- function(x, y) {
     .Call('cFDR_becdf', PACKAGE = 'cFDR', x, y)
 }
 
+<<<<<<< HEAD
 #' univariate eCDF
 #' calculate p(X<x) for fixed vector of points x
 uecdf <- function(x) {
@@ -19,6 +20,8 @@ wecdf <- function(x, w) {
 }
 
 #' conditional eCDF
+=======
+>>>>>>> f5ad236c4d30b49bf9bca0a33bc8087ebc743ec5
 #' calculate p(X<x|Y<y) for fixed vectors of points x and y
 cecdf <- function(x, y) {
     .Call('cFDR_cecdf', PACKAGE = 'cFDR', x, y)
