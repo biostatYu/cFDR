@@ -49,11 +49,8 @@ FDR.assess <- function(Z,alt,alpha) {
 findrects <- function(df) {
     o <- order(df$x,decreasing=TRUE)
     df <- df[o,]
-<<<<<<< HEAD
     keep <- rects(df$x,df$y2)
-=======
-    keep <- rects(df$x,df$y1)
->>>>>>> f5ad236c4d30b49bf9bca0a33bc8087ebc743ec5
+    #keep <- rects(df$x,df$y1)
     return(df[which(keep==TRUE),,drop=FALSE])
 }
 ## findrects <- function(df) {
@@ -71,15 +68,15 @@ findrects <- function(df) {
 ## }
 
 getA <- function(df,p2) {
-<<<<<<< HEAD
+## <<<<<<< HEAD
     y2diff <- diff(c(0,df$y2))
     df$x * y2diff
-=======
-    y1diff <- diff(c(0,df$y1))
-#    df$A1 <- df$x * df$ydiff
-    y2diff <- diff(c(0,df$y2))
-    df$x * (y2diff + y1diff)
->>>>>>> f5ad236c4d30b49bf9bca0a33bc8087ebc743ec5
+## =======
+    ## y1diff <- diff(c(0,df$y1))
+   ## df$A1 <- df$x * df$ydiff
+    ## y2diff <- diff(c(0,df$y2))
+    ## df$x * (y2diff + y1diff)
+## >>>>>>> f5ad236c4d30b49bf9bca0a33bc8087ebc743ec5
 }
 
 ##' Calculate cFDR given vectors of *independent* test and conditional Z scores
@@ -106,13 +103,13 @@ cFDR <- function(Z,Zc,eps=0.01,alpha=seq(0.01,0.1,by=0.005),do.optimise=FALSE,
     pc <- 2*pnorm(abs(Zc),lower.tail=FALSE)
     pp <- p / cecdf(p,pc)
     summary(pp)
-<<<<<<< HEAD
-    Zc.fit <- switch(method,
-                     both=fit.both(Zc[abs(Z)<qnorm(0.4,lower.tail=FALSE)]),
-                     means=fit.both(Zc[abs(Z)<qnorm(0.4,lower.tail=FALSE)]),
-                     vars=fit.vars(Zc[abs(Z)<qnorm(0.4,lower.tail=FALSE)]),
-                     unif=NA)
-    ## empirical cdf of pc assuming p>0.8 all H0(x) 
+## <<<<<<< HEAD
+##     Zc.fit <- switch(method,
+##                      both=fit.both(Zc[abs(Z)<qnorm(0.4,lower.tail=FALSE)]),
+##                      means=fit.both(Zc[abs(Z)<qnorm(0.4,lower.tail=FALSE)]),
+##                      vars=fit.vars(Zc[abs(Z)<qnorm(0.4,lower.tail=FALSE)]),
+##                      unif=NA)
+##     ## empirical cdf of pc assuming p>0.8 all H0(x) 
     pc.ecdf <- ecdf(pc[p>0.8])
 
     ## lf <- locfdr(qnorm(x/2,lower.tail=FALSE) * sample(c(-1,1),n,replace=TRUE),nulltype=0)
@@ -129,13 +126,13 @@ cFDR <- function(Z,Zc,eps=0.01,alpha=seq(0.01,0.1,by=0.005),do.optimise=FALSE,
     ##         } else {
     ##             data.frame(x=p,y=pc,y2=pc*Zc.fit["pi0"]+pc2*(1-Zc.fit["pi0"]),pp=pp)
     ##         }
-=======
-    Zc.fit <- fit.both(Zc[abs(Z)<qnorm(0.4,lower.tail=FALSE)]) # p value > 0.8
-    q <- qnorm(pc/2)
-    pc2 <- pnorm(q,Zc.fit["mu"],sd=sqrt(Zc.fit["sigma2"]))*2
-    data <- data.frame(x=p,y=pc,y1=pc*Zc.fit["pi0"],y2=pc2*(1-Zc.fit["pi0"]),pp=pp)
->>>>>>> f5ad236c4d30b49bf9bca0a33bc8087ebc743ec5
-    if(do.optimise) {
+## =======
+##     Zc.fit <- fit.both(Zc[abs(Z)<qnorm(0.4,lower.tail=FALSE)]) # p value > 0.8
+##     q <- qnorm(pc/2)
+##     pc2 <- pnorm(q,Zc.fit["mu"],sd=sqrt(Zc.fit["sigma2"]))*2
+##     data <- data.frame(x=p,y=pc,y1=pc*Zc.fit["pi0"],y2=pc2*(1-Zc.fit["pi0"]),pp=pp)
+## >>>>>>> f5ad236c4d30b49bf9bca0a33bc8087ebc743ec5
+     if(do.optimise) {
         if(length(alpha)>1)
             stop("can only optimise to a single alpha")
         o <- optimise(cFDR.tune, data=data, ..., alpha.target=alpha, interval=alpha*c(0.00001,1),tol=eps)
@@ -166,10 +163,7 @@ cFDR <- function(Z,Zc,eps=0.01,alpha=seq(0.01,0.1,by=0.005),do.optimise=FALSE,
 ##' @author Chris Wallace
 cFDR.tune <- function(alpha.current=alpha.target, data, alpha.target=0.05,
                       method=c("liley.area","constant.density","liley.number","unadjusted")) {
-<<<<<<< HEAD
-=======
     #method <- match.arg(method)
->>>>>>> f5ad236c4d30b49bf9bca0a33bc8087ebc743ec5
                                         #    message(method,"\t",alpha.current)
     reject <- data$pp<=alpha.current #& p<=p.max
     nL <- sum(reject)
@@ -177,11 +171,11 @@ cFDR.tune <- function(alpha.current=alpha.target, data, alpha.target=0.05,
         return(0)
     allM <- data[reject,,drop=FALSE]
     wh <- which.max(allM$y * allM$x)
-<<<<<<< HEAD
-    aM <- allM$x[wh] * allM$y2[wh] # (allM$y1[wh] + allM$y2[wh])
-=======
+## <<<<<<< HEAD
+    ## aM <- allM$x[wh] * allM$y2[wh] # (allM$y1[wh] + allM$y2[wh])
+## =======
     aM <- allM$x[wh] * allM$y # (allM$y1[wh] + allM$y2[wh])
->>>>>>> f5ad236c4d30b49bf9bca0a33bc8087ebc743ec5
+## >>>>>>> f5ad236c4d30b49bf9bca0a33bc8087ebc743ec5
     alphaM <- allM$pp[wh]
     
     Mrect <- findrects(allM)
